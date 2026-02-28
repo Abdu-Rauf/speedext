@@ -16,14 +16,14 @@ async def testnet_ext():
         await asyncio.sleep(2)
 
         await page.click('.button.btn.btnGr.btn-default.small.button22')
-        await asyncio.sleep(15)
+        await asyncio.sleep(20)
 
         #Extract speed value and close
         await page.wait_for_selector('.color22')
         speed = await page.text_content('.color22')
         await browser.close()
 
-        return {'testmynet':speed}
+        return speed
 
 
 async def main():
