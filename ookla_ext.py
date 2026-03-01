@@ -1,8 +1,3 @@
-# speed_class ='result-data-large number result-data-value download-speed'
-
-# button_class = 'start-text'
-
-# unit = 'result-data-unit'
 import asyncio
 from playwright.async_api import async_playwright
 
@@ -13,24 +8,12 @@ async def ookla_ext():
         browser = await f.chromium.launch(
             # headless=False
         )
-        # context = await browser.new_context(
-        #     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        #     viewport={"width": 1280, "height": 720},
-        # )
-
         page = await browser.new_page()
-
-        #         await page.add_init_script("""
-        # Object.defineProperty(navigator, 'webdriver', { get: () => false });
-        # """)
 
         await page.goto('https://www.speedtest.net/')
 
-
-
         # Click GO
         await page.wait_for_selector("span.start-text", timeout=10000)
-        # await page.hover("span.start-text")
         await page.click('span.start-text')
         await asyncio.sleep(30) # Wait for speed test to finitsh completing
 
