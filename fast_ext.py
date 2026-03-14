@@ -10,8 +10,7 @@ async def fast_ext():
         await page.goto('https://fast.com/')
 
         # Wait for speed test to complete
-        await page.wait_for_selector('.speed-units-container.succeeded')
-        # await asyncio.sleep(10)
+        await asyncio.sleep(30)
         speed = await page.text_content('#speed-value')
         speed_unit = await page.text_content('#speed-units')
 
