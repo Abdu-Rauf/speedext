@@ -30,7 +30,7 @@ func GetDownload(ctx context.Context, client *http.Client, totalBytes *atomic.Ui
 			log.Println("Worker error", wid, err)
 			continue
 		}
-		// Track the number of bytes read and add it atomically
+		// Track the number of bytes read and add it to the atomic var
 		n, _ := io.Copy(io.Discard, resp.Body)
 		resp.Body.Close()
 
