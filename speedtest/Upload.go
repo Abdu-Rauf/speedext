@@ -1,13 +1,15 @@
-package main
+package speedtest
 
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"io"
 	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // 1. The custom reader that counts bytes as the HTTP client pulls them
@@ -24,6 +26,43 @@ func (t *trackingReader) Read(p []byte) (n int, err error) {
 		t.totalBytes.Add(uint64(n))
 	}
 	return n, err
+}
+func RunUpload() float64 {
+	// // Create a 32kb slice of random data to act as our upload payload.
+	payloadSize := 25 * 1024 * 1024
+	payload := make([]byte, payloadSize)
+	rand.Read(payload) // Fill the slice with random bytes
+
+	// atomic variable to track total bytes
+	var totalUploaded atomic.Uint64
+	var wg sync.WaitGroup
+
+	// Custom client to maintain Open connections
+	client := http.Client{
+		Transport: &http.Transport{
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 100,
+		},
+	}
+	// run sequentially --same isp pipeline , tcp acks of download use upload pipeline , simple/clear
+	// Workers running parallely to avoid RTT bottleneck
+	numworkers := 4
+	upload, stopupload := context.WithTimeout(context.Background(), 30*time.Second)
+	defer stopupload()
+
+	for i := 1; i <= numworkers; i++ {
+		wg.Add(1)
+		go GetUpload(upload, &client, payload, &totalUploaded, &wg, i)
+	}
+
+	wg.Wait()
+
+	// Calculating Upload Speed
+	uploadedBytes := totalUploaded.Load()
+	meg := float64(uploadedBytes) * 8 / 1e6
+	uploadSpeed := meg / 30.0
+
+	return uploadSpeed
 }
 
 // 2. The upload worker that continuously pushes data to Cloudflare
@@ -51,8 +90,8 @@ func GetUpload(ctx context.Context, client *http.Client, payload []byte, totalBy
 		}
 
 		// Set the content type so Cloudflare knows we are just sending raw binary data(is this even necessary if so why??)
-		// req.ContentLength = int64(len(payload))
-		// req.Header.Set("Content-Type", "application/octet-stream")
+		req.ContentLength = int64(len(payload))
+		req.Header.Set("Content-Type", "application/octet-stream")
 
 		// Execute the upload
 		resp, err := client.Do(req)
