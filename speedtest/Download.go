@@ -36,8 +36,6 @@ func RunDownload() float64 {
 	}
 	wg.Wait()
 
-	log.Println("Completed Download Testing Starting Upload Speed Testing")
-
 	downloadedBytes := totalBytes.Load()
 	megabits := float64(downloadedBytes) * 8 / 1e6
 	downloadSpeed := megabits / 30.0
